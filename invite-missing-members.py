@@ -23,18 +23,17 @@ while page_members := (
     if 'message' in page_members:
         print(page_members["message"])
         sys.exit(1)
-    print(f"Fetched page {page}")
     page += 1
     existing_members += page_members
 existing_members = set([m["login"].lower() for m in existing_members])
 
-desired_members = yaml.load(open("member.yaml"), Loader=yaml.SafeLoader)
+desired_members = yaml.load(open("members.yaml"), Loader=yaml.SafeLoader)
 desired_members = set([m.lower() for m in desired_members])
 
 missing_members = desired_members - existing_members
 
 for member in missing_members:
-    print(f"Inviting {member}")
+    print(f"Inviting {member}...")
 
     user = requests.get(user_url + member, headers=headers).json()
     if "message" in user:
