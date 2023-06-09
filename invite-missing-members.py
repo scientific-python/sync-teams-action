@@ -35,7 +35,7 @@ for member in missing_members:
         invite_url,
         data={"invitee_id": member, "role": "direct_member"},
         headers=headers
-    )
+    ).json()
     if "message" in response:
         raise RuntimeError(response["message"])
     response.raise_for_status()
