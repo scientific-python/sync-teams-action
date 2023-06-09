@@ -14,5 +14,5 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: >-
-        pip install pyyaml requests
+        pip install pyyaml requests;
         python ${{ github.action_path }}/invite-missing-members.py
