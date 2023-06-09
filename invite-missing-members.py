@@ -2,6 +2,7 @@ import yaml
 import requests
 import argparse
 import os
+import json
 
 org = "scientific-python"
 members_url = f"https://api.github.com/orgs/{org}/members"
@@ -33,7 +34,7 @@ missing_members = desired_members - existing_members
 for member in missing_members:
     response = requests.post(
         invite_url,
-        data={"invitee_id": member, "role": "direct_member"},
+        json={"invitee_id": member, "role": "direct_member"},
         headers=headers
     ).json()
     if "message" in response:
