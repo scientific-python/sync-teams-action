@@ -18,7 +18,8 @@ existing_members = []
 while page_members := (
     requests.get(members_url + f"?page={page}", headers=headers).json()
 ):
-    print(page_members)
+    if 'message' in page_members:
+        raise RuntimeError(page_members["message"])
     print(f"Fetched page {page}")
     page += 1
     existing_members += page_members
@@ -35,4 +36,6 @@ for member in missing_members:
         data={"invitee_id": member, "role": "direct_member"},
         headers=headers
     )
+    if "message" in response:
+        raise RuntimeError(response["message"])
     response.raise_for_status()
