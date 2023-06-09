@@ -18,6 +18,8 @@ existing_members = []
 while page_members := (
     requests.get(members_url + f"?page={page}", headers=headers).json()
 ):
+    print(page_members)
+    print(f"Fetched page {page}")
     page += 1
     existing_members += page_members
 existing_members = set([m["login"].lower() for m in existing_members])
