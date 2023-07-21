@@ -1,5 +1,5 @@
-name: 'Invite new members'
-description: 'Read member list from YAML file and invite missing members'
+name: 'Synchronize teams to GitHub'
+description: 'Read team membership/permissions from YAML and make changes on GH as necessary'
 
 inputs:
   token:
@@ -9,10 +9,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Invite missing members
+    - name: Sync teams
       env:
         GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: >-
         pip install pyyaml requests;
-        python ${{ github.action_path }}/invite-missing-members.py
+        python ${{ github.action_path }}/sync-teams-to-gh.py
