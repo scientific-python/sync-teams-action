@@ -31,6 +31,9 @@ parser.add_argument('-n', '--dry-run', action='store_true')
 args = parser.parse_args()
 
 
+DARK_GRAY = "\033[1;90m"
+RESET = "\033[0m"
+
 def get(url, fail_ok=False):
     """Get with paging.
     """
@@ -40,7 +43,7 @@ def get(url, fail_ok=False):
     page = 1
     more_pages = True
     while more_pages:
-        print(f'GET {url}')
+        print(f'{DARK_GRAY}GET {url}{RESET}')
         r = requests.get(url + f"?page={page}", headers=headers)
 
         try:
@@ -73,7 +76,7 @@ def http_method(url, data={}, method=None):
         url = api + url
 
     if not args.dry_run:
-        print(f'{method} {url}')
+        print(f'{DARK_GRAY}{method} {url}{RESET}')
         r = request_method(url, headers=headers, json=data)
         try:
             data = r.json()
@@ -132,7 +135,7 @@ for team in config.values():
     if (config_description and
         (config_description != gh_team["description"])):
 
-        print(f"Updating `{name}` description")
+        print(f"Updating `{team_slug}` description to `{config_description}`")
         patch(
             f"/orgs/{org}/teams/{team_slug}",
             {"description": config_description}
@@ -146,12 +149,14 @@ for team in config.values():
     members_removed = members - set(team["members"])
 
     for username in members_added:
+        print(f"Adding `{username}` to `{team_slug}`")
         put(
             f"/orgs/{org}/teams/{team_slug}/memberships/{username}",
             {"role": "member"}
         )
 
     for username in members_removed:
+        print(f"Removing `{username}` from `{team_slug}`")
         delete(f"/orgs/{org}/teams/{team_slug}/memberships/{username}")
 
     for repo_role in team["permissions"]:
@@ -166,6 +171,7 @@ for team in config.values():
         gh_role = response.get("role_name")
 
         if gh_role != role:
+            print(f"Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
             put(
                 f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
                 {"permission": role}
