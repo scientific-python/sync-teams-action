@@ -23,10 +23,6 @@ headers = {
 }
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    '-m', '--match', action='store_true',
-    help='Check whether teams.yaml reflects teams on GitHub'
-)
 parser.add_argument('-n', '--dry-run', action='store_true')
 args = parser.parse_args()
 
