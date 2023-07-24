@@ -21,3 +21,13 @@
     - repo: specs
       role: triage
 ```
+
+## Revoking team access from repo
+
+Set `role` to None:
+
+```
+  permissions:
+    - repo: myrepo
+      role:
+```

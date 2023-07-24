@@ -171,8 +171,12 @@ for team in config.values():
         gh_role = response.get("role_name")
 
         if gh_role != role:
-            print(f"Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
-            put(
-                f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
-                {"permission": role}
-            )
+            if role is None:
+                print(f"Revoking `{team_slug}` access from repo `{owner}/{repo}`")
+                delete(f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}")
+            else:
+                print(f"Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
+                put(
+                    f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
+                    {"permission": role}
+                )
