@@ -128,7 +128,7 @@ gh_teams = {team["name"]: team for team in get(f"/orgs/{org}/teams")}
 if args.membership:
     out = []
 
-    for team, data in list(gh_teams.items()):
+    for team, data in gh_teams.items():
         team_slug = data['slug']
         members = {
             member["login"]
@@ -144,7 +144,7 @@ if args.membership:
         t = {
             'name' : team,
             'description': data['description'],
-            'members': list(members)
+            'members': sorted(members, key=lambda x: x.lower())
         }
         if permissions:
             t['permissions'] = permissions
