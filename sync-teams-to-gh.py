@@ -24,11 +24,29 @@ headers = {
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--dry-run', action='store_true')
+parser.add_argument(
+    '-m', '--membership',
+    action='store_true', help="Print current membership as YAML"
+)
+parser.add_argument(
+    '-q', '--quiet',
+    action='store_true', help='Suppress HTTP method output'
+)
 args = parser.parse_args()
+
+
+if args.membership:
+    args.quiet = True
 
 
 DARK_GRAY = "\033[1;90m"
 RESET = "\033[0m"
+
+
+def qprint(*pargs, **kwargs):
+    if not args.quiet:
+        print(*pargs, **kwargs)
+
 
 def get(url, fail_ok=False):
     """Get with paging.
@@ -39,13 +57,17 @@ def get(url, fail_ok=False):
     page = 1
     more_pages = True
     while more_pages:
-        print(f'{DARK_GRAY}GET {url}{RESET}')
+        if page == 1:
+            qprint(f'{DARK_GRAY}GET {url}{RESET}')
+        else:
+            qprint(f'{DARK_GRAY}GET {url} [{page}]{RESET}')
+
         r = requests.get(url + f"?page={page}", headers=headers)
 
         try:
             data = r.json()
         except json.decoder.JSONDecodeError:
-            print("Error: cannot decode JSON response")
+            qprint("Error: cannot decode JSON response")
             sys.exit(1)
 
         if fail_ok and "message" in data:
@@ -53,10 +75,12 @@ def get(url, fail_ok=False):
             return data
 
         if "message" in data:
-            print(f"Error retrieving {url}: {data['message']}")
+            qprint(f"Error retrieving {url}: {data['message']}")
             sys.exit(1)
 
-        if "next" not in r.links:
+        if "next" in r.links:
+            page += 1
+        else:
             more_pages = False
 
     return data
@@ -72,7 +96,7 @@ def http_method(url, data={}, method=None):
         url = api + url
 
     if not args.dry_run:
-        print(f'{DARK_GRAY}{method} {url}{RESET}')
+        qprint(f'{DARK_GRAY}{method} {url}{RESET}')
         r = request_method(url, headers=headers, json=data)
         try:
             data = r.json()
@@ -80,11 +104,11 @@ def http_method(url, data={}, method=None):
             return {}
 
         if "message" in data:
-            print(f"Error retrieving {url}: {data['message']}")
+            qprint(f"Error retrieving {url}: {data['message']}")
             sys.exit(1)
 
     else:
-        print(f'Dry run: {method} [{url}]')
+        qprint(f'Dry run: {method} [{url}]')
 
 
 post = functools.partial(http_method, method='POST')
@@ -97,6 +121,30 @@ config = {team["name"]: team for team in config}
 
 gh_teams = {team["name"]: team for team in get(f"/orgs/{org}/teams")}
 
+
+if args.membership:
+    out = []
+
+    for team, data in list(gh_teams.items()):
+        team_slug = data['slug']
+        members = {
+            member["login"]
+            for member in get(f"/orgs/{org}/teams/{team_slug}/members")
+        }
+
+        t = {
+            'name' : team,
+            'description': data['description'],
+            'members': list(members)
+        }
+        out.append(t)
+
+    for team in out:
+        print(yaml.dump([team], sort_keys=False))
+
+    sys.exit()
+
+
 desired_teams = set(config)
 existing_teams = set(gh_teams)
 missing_teams = desired_teams - existing_teams
@@ -105,7 +153,7 @@ missing_teams = desired_teams - existing_teams
 for team in missing_teams:
     team_info = config[team]
 
-    print(f"Creating `{team}` team")
+    qprint(f"Creating `{team}` team")
     post(
         f"/orgs/{org}/teams",
         {
@@ -131,7 +179,7 @@ for team in config.values():
     if (config_description and
         (config_description != gh_team["description"])):
 
-        print(f"Updating `{team_slug}` description to `{config_description}`")
+        qprint(f"Updating `{team_slug}` description to `{config_description}`")
         patch(
             f"/orgs/{org}/teams/{team_slug}",
             {"description": config_description}
@@ -145,14 +193,14 @@ for team in config.values():
     members_removed = members - set(team["members"])
 
     for username in members_added:
-        print(f"Adding `{username}` to `{team_slug}`")
+        qprint(f"Adding `{username}` to `{team_slug}`")
         put(
             f"/orgs/{org}/teams/{team_slug}/memberships/{username}",
             {"role": "member"}
         )
 
     for username in members_removed:
-        print(f"Removing `{username}` from `{team_slug}`")
+        qprint(f"Removing `{username}` from `{team_slug}`")
         delete(f"/orgs/{org}/teams/{team_slug}/memberships/{username}")
 
     for repo_role in team["permissions"]:
@@ -168,10 +216,10 @@ for team in config.values():
 
         if gh_role != role:
             if role is None:
-                print(f"Revoking `{team_slug}` access from repo `{owner}/{repo}`")
+                qprint(f"Revoking `{team_slug}` access from repo `{owner}/{repo}`")
                 delete(f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}")
             else:
-                print(f"Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
+                qprint(f"Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
                 put(
                     f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
                     {"permission": role}
