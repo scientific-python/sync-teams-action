@@ -23,10 +23,13 @@ headers = {
 }
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--dry-run', action='store_true')
+parser.add_argument(
+    '-n', '--dry-run',
+    action='store_true'
+)
 parser.add_argument(
     '-m', '--membership',
-    action='store_true', help="Print current membership as YAML"
+    action='store_true', help="Print current team membership/permissions as YAML"
 )
 parser.add_argument(
     '-q', '--quiet',
@@ -132,11 +135,20 @@ if args.membership:
             for member in get(f"/orgs/{org}/teams/{team_slug}/members")
         }
 
+        gh_repos = get(f"/orgs/{org}/teams/{team_slug}/repos")
+        permissions = [
+            {'repo': repo['name'], 'role': repo['role_name']}
+            for repo in gh_repos
+        ]
+
         t = {
             'name' : team,
             'description': data['description'],
             'members': list(members)
         }
+        if permissions:
+            t['permissions'] = permissions
+
         out.append(t)
 
     for team in out:
@@ -203,7 +215,7 @@ for team in config.values():
         qprint(f"Removing `{username}` from `{team_slug}`")
         delete(f"/orgs/{org}/teams/{team_slug}/memberships/{username}")
 
-    for repo_role in team["permissions"]:
+    for repo_role in team.get("permissions", []):
         repo = repo_role["repo"]
         role = repo_role["role"]
         owner = "scientific-python"
