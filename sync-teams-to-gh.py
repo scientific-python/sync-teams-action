@@ -136,9 +136,6 @@ patch = functools.partial(http_method, method='PATCH')
 put = functools.partial(http_method, method='PUT')
 delete = functools.partial(http_method, method='DELETE')
 
-config = yaml.load(open("teams.yaml"), Loader=yaml.SafeLoader)
-config = {team["name"]: team for team in config}
-
 gh_teams = {team["name"]: team for team in get_pages(f"/orgs/{org}/teams")}
 
 
@@ -172,6 +169,10 @@ if args.download:
         print(yaml.dump([team], sort_keys=False))
 
     sys.exit()
+
+
+config = yaml.load(open("teams.yaml"), Loader=yaml.SafeLoader)
+config = {team["name"]: team for team in config}
 
 
 desired_teams = set(config)
