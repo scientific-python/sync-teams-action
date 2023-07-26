@@ -28,8 +28,8 @@ parser.add_argument(
     action='store_true'
 )
 parser.add_argument(
-    '-m', '--membership',
-    action='store_true', help="Print current team membership/permissions as YAML"
+    '-d', '--download',
+    action='store_true', help="Download current team membership/permissions"
 )
 parser.add_argument(
     '-q', '--quiet',
@@ -38,7 +38,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-if args.membership:
+if args.download:
     args.quiet = True
 
 
@@ -125,7 +125,7 @@ config = {team["name"]: team for team in config}
 gh_teams = {team["name"]: team for team in get(f"/orgs/{org}/teams")}
 
 
-if args.membership:
+if args.download:
     out = []
 
     for team, data in gh_teams.items():
