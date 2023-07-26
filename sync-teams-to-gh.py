@@ -110,24 +110,24 @@ def http_method(url, data={}, method=None, fail_ok=False):
     if url.startswith('/'):
         url = api + url
 
-    if not args.dry_run:
-        qprint(f'{DARK_GRAY}{method} {url}{RESET}')
-        r = request_method(url, headers=headers, json=data)
-        try:
-            data = r.json()
-        except json.decoder.JSONDecodeError:
-            data = {}
+    # Skip all methods other than GET on dry run
+    if args.dry_run and (method != 'GET'):
+        return
 
-        data["status"] = r.status_code
+    qprint(f'{DARK_GRAY}{method} {url}{RESET}')
+    r = request_method(url, headers=headers, json=data)
+    try:
+        data = r.json()
+    except json.decoder.JSONDecodeError:
+        data = {}
 
-        if ("message" in data) and (not fail_ok):
-            qprint(f"Error retrieving {url}: {data['message']}")
-            sys.exit(1)
+    data["status"] = r.status_code
 
-        return data
+    if ("message" in data) and (not fail_ok):
+        qprint(f"Error retrieving {url}: {data['message']}")
+        sys.exit(1)
 
-    else:
-        qprint(f'Dry run: {method} [{url}]')
+    return data
 
 
 get = functools.partial(http_method, method='GET')
