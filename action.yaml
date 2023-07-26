@@ -15,4 +15,4 @@ runs:
       shell: bash
       run: >-
         pip install pyyaml requests;
-        python ${{ github.action_path }}/sync-teams-to-gh.py
+        python ${{ github.action_path }}/sync-teams-to-gh.py >> $GITHUB_STEP_SUMMARY
