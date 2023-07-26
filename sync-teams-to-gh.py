@@ -15,13 +15,6 @@ import sys
 org = "scientific-python"
 api = "https://api.github.com"
 
-headers = {
-    "Accept": "application/vnd.github+json",
-    "Accept": "application/vnd.github.v3.repository+json",
-    "X-GitHub-Api-Version": "2022-11-28",
-    "Authorization": f"token {os.environ['GH_TOKEN']}",
-}
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-n', '--dry-run',
@@ -36,6 +29,22 @@ parser.add_argument(
     action='store_true', help='Suppress HTTP method output'
 )
 args = parser.parse_args()
+
+if not 'GH_TOKEN' in os.environ:
+    print("Please set `GH_TOKEN` before running this script.\n")
+    print(
+        "The token needs to be a classic token with 'Repo' "
+        "and 'Admin' permissions."
+    )
+    sys.exit(1)
+
+
+headers = {
+    "Accept": "application/vnd.github+json",
+    "Accept": "application/vnd.github.v3.repository+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "Authorization": f"token {os.environ['GH_TOKEN']}",
+}
 
 
 if args.download:
