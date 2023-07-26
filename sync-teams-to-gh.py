@@ -119,9 +119,6 @@ patch = functools.partial(http_method, method='PATCH')
 put = functools.partial(http_method, method='PUT')
 delete = functools.partial(http_method, method='DELETE')
 
-config = yaml.load(open("teams.yaml"), Loader=yaml.SafeLoader)
-config = {team["name"]: team for team in config}
-
 gh_teams = {team["name"]: team for team in get(f"/orgs/{org}/teams")}
 
 
@@ -156,6 +153,9 @@ if args.membership:
 
     sys.exit()
 
+
+config = yaml.load(open("teams.yaml"), Loader=yaml.SafeLoader)
+config = {team["name"]: team for team in config}
 
 desired_teams = set(config)
 existing_teams = set(gh_teams)
