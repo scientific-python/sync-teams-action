@@ -15,21 +15,14 @@ import sys
 org = "scientific-python"
 api = "https://api.github.com"
 
-headers = {
-    "Accept": "application/vnd.github+json",
-    "Accept": "application/vnd.github.v3.repository+json",
-    "X-GitHub-Api-Version": "2022-11-28",
-    "Authorization": f"token {os.environ['GH_TOKEN']}",
-}
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-n', '--dry-run',
     action='store_true'
 )
 parser.add_argument(
-    '-m', '--membership',
-    action='store_true', help="Print current team membership/permissions as YAML"
+    '-d', '--download',
+    action='store_true', help="Download current team membership/permissions"
 )
 parser.add_argument(
     '-q', '--quiet',
@@ -37,8 +30,24 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+if not 'GH_TOKEN' in os.environ:
+    print("Please set `GH_TOKEN` before running this script.\n")
+    print(
+        "The token needs to be a classic token with 'Repo' "
+        "and 'Admin' permissions."
+    )
+    sys.exit(1)
 
-if args.membership:
+
+headers = {
+    "Accept": "application/vnd.github+json",
+    "Accept": "application/vnd.github.v3.repository+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "Authorization": f"token {os.environ['GH_TOKEN']}",
+}
+
+
+if args.download:
     args.quiet = True
 
 
@@ -51,7 +60,7 @@ def qprint(*pargs, **kwargs):
         print(*pargs, **kwargs)
 
 
-def get(url, fail_ok=False):
+def get_pages(url):
     """Get with paging.
     """
     if url.startswith('/'):
@@ -59,6 +68,8 @@ def get(url, fail_ok=False):
 
     page = 1
     more_pages = True
+    data = []
+
     while more_pages:
         if page == 1:
             qprint(f'{DARK_GRAY}GET {url}{RESET}')
@@ -68,17 +79,13 @@ def get(url, fail_ok=False):
         r = requests.get(url + f"?page={page}", headers=headers)
 
         try:
-            data = r.json()
+            page_data = r.json()
         except json.decoder.JSONDecodeError:
             qprint("Error: cannot decode JSON response")
             sys.exit(1)
 
-        if fail_ok and "message" in data:
-            data["status"] = r.status_code
-            return data
-
-        if "message" in data:
-            qprint(f"Error retrieving {url}: {data['message']}")
+        if "message" in page_data:
+            qprint(f"Error retrieving {url}: {page_data['message']}")
             sys.exit(1)
 
         if "next" in r.links:
@@ -86,10 +93,15 @@ def get(url, fail_ok=False):
         else:
             more_pages = False
 
+        if not isinstance(page_data, list):
+            raise RuntimeError("Paginated request result is not a list")
+
+        data.extend(page_data)
+
     return data
 
 
-def http_method(url, data={}, method=None):
+def http_method(url, data={}, method=None, fail_ok=False):
     request_method = getattr(requests, method.lower())
 
     if method is None:
@@ -104,35 +116,41 @@ def http_method(url, data={}, method=None):
         try:
             data = r.json()
         except json.decoder.JSONDecodeError:
-            return {}
+            data = {}
 
-        if "message" in data:
+        data["status"] = r.status_code
+
+        if ("message" in data) and (not fail_ok):
             qprint(f"Error retrieving {url}: {data['message']}")
             sys.exit(1)
+
+        return data
 
     else:
         qprint(f'Dry run: {method} [{url}]')
 
 
+get = functools.partial(http_method, method='GET')
 post = functools.partial(http_method, method='POST')
 patch = functools.partial(http_method, method='PATCH')
 put = functools.partial(http_method, method='PUT')
 delete = functools.partial(http_method, method='DELETE')
 
-gh_teams = {team["name"]: team for team in get(f"/orgs/{org}/teams")}
+
+gh_teams = {team["name"]: team for team in get_pages(f"/orgs/{org}/teams")}
 
 
-if args.membership:
+if args.download:
     out = []
 
     for team, data in gh_teams.items():
         team_slug = data['slug']
         members = {
             member["login"]
-            for member in get(f"/orgs/{org}/teams/{team_slug}/members")
+            for member in get_pages(f"/orgs/{org}/teams/{team_slug}/members")
         }
 
-        gh_repos = get(f"/orgs/{org}/teams/{team_slug}/repos")
+        gh_repos = get_pages(f"/orgs/{org}/teams/{team_slug}/repos")
         permissions = [
             {'repo': repo['name'], 'role': repo['role_name']}
             for repo in gh_repos
@@ -157,6 +175,7 @@ if args.membership:
 config = yaml.load(open("teams.yaml"), Loader=yaml.SafeLoader)
 config = {team["name"]: team for team in config}
 
+
 desired_teams = set(config)
 existing_teams = set(gh_teams)
 missing_teams = desired_teams - existing_teams
@@ -177,7 +196,7 @@ for team in missing_teams:
 
 if missing_teams:
     # Refetch teams list
-    gh_teams = {team["name"]: team for team in get(f"/orgs/{org}/teams")}
+    gh_teams = {team["name"]: team for team in get_pages(f"/orgs/{org}/teams")}
 
 
 for team in config.values():
@@ -199,7 +218,7 @@ for team in config.values():
 
     members = {
         member["login"]
-        for member in get(f"/orgs/{org}/teams/{team_slug}/members")
+        for member in get_pages(f"/orgs/{org}/teams/{team_slug}/members")
     }
     members_added = set(team["members"]) - members
     members_removed = members - set(team["members"])
@@ -224,6 +243,10 @@ for team in config.values():
             f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
             fail_ok=True
         )
+        if response["status"] not in (200, 404):
+            print("Error: could not query `{team_slug}` access to `{repo}/{role}`")
+            sys.exit(1)
+
         gh_role = response.get("role_name")
 
         if gh_role != role:
