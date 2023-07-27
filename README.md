@@ -60,6 +60,10 @@ See the [token](#token) section below.
       role: triage
 ```
 
+## Child teams permissions
+
+Setting repo permissions for child teams is not supported.
+
 ## Token
 
 The script requires a classic token with `org` and `admin` permissions, exported as a `GH_TOKEN` environment variable.
