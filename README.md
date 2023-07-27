@@ -60,6 +60,14 @@ See the [token](#token) section below.
       role: triage
 ```
 
+Valid permissions include `pull`, `push`, `triage`, `admin`, and
+`maintain`, [corresponding
+to](https://github.com/github/rest-api-description/issues/1378)
+`read`, `write`, `triage`, `admin`, and `maintain` roles in the web
+interface.
+
+## Action output
+
 After the action is run, you will see its output in the *workflow summary*.
 
 ## Child teams permissions
