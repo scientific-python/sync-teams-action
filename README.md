@@ -60,11 +60,7 @@ See the [token](#token) section below.
       role: triage
 ```
 
-Valid permissions include `pull`, `push`, `triage`, `admin`, and
-`maintain`, [corresponding
-to](https://github.com/github/rest-api-description/issues/1378)
-`read`, `write`, `triage`, `admin`, and `maintain` roles in the web
-interface.
+Valid permissions are `read`, `write`, `triage`, `maintain`, and `admin`.
 
 ## Action output
 
