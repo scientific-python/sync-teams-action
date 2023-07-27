@@ -9,10 +9,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
     - name: Sync teams
       env:
         GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: >-
-        pip install pyyaml requests;
+        python -m pip install pyyaml requests;
         python ${{ github.action_path }}/sync-teams-to-gh.py >> $GITHUB_STEP_SUMMARY
