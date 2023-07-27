@@ -260,6 +260,13 @@ for team in config.values():
 
         gh_role = response.get("role_name")
 
+        # The GitHub API has inconsistent role values, so we need to translate.
+        # https://github.com/github/rest-api-description/issues/1378
+        gh_role = {
+            "write": "push",
+            "read": "pull"
+        }.get(gh_role, gh_role)
+
         if gh_role != role:
             if role is None:
                 qprint(f"🔧 Revoking `{team_slug}` access from repo `{owner}/{repo}`")
