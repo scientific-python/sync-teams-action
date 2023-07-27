@@ -10,6 +10,7 @@ import json
 import argparse
 import functools
 import sys
+import re
 
 
 org = "scientific-python"
@@ -27,6 +28,10 @@ parser.add_argument(
 parser.add_argument(
     '-q', '--quiet',
     action='store_true', help='Suppress HTTP method output'
+)
+parser.add_argument(
+    '-m', '--markdown',
+    action='store_true', help='Print output in Markdown format'
 )
 args = parser.parse_args()
 
@@ -55,9 +60,14 @@ DARK_GRAY = "\033[1;90m"
 RESET = "\033[0m"
 
 
-def qprint(*pargs, **kwargs):
+def qprint(msg, **kwargs):
+    # Strip ANSI if output is markdown
+    if args.markdown:
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        msg = ansi_escape.sub('', msg)
+
     if not args.quiet:
-        print(*pargs, **kwargs)
+        print(msg, **kwargs)
 
 
 def get_pages(url):
@@ -72,20 +82,20 @@ def get_pages(url):
 
     while more_pages:
         if page == 1:
-            qprint(f'{DARK_GRAY}GET {url}{RESET}')
+            qprint(f'🌐 {DARK_GRAY}GET {url}{RESET}')
         else:
-            qprint(f'{DARK_GRAY}GET {url} [{page}]{RESET}')
+            qprint(f'🌐 {DARK_GRAY}GET {url} [{page}]{RESET}')
 
         r = requests.get(url + f"?page={page}", headers=headers)
 
         try:
             page_data = r.json()
         except json.decoder.JSONDecodeError:
-            qprint("Error: cannot decode JSON response")
+            qprint("⚠ Error: cannot decode JSON response")
             sys.exit(1)
 
         if "message" in page_data:
-            qprint(f"Error retrieving {url}: {page_data['message']}")
+            qprint(f"⚠ Error retrieving {url}: {page_data['message']}")
             sys.exit(1)
 
         if "next" in r.links:
@@ -94,7 +104,8 @@ def get_pages(url):
             more_pages = False
 
         if not isinstance(page_data, list):
-            raise RuntimeError("Paginated request result is not a list")
+            print("⚠ Paginated request result not a list")
+            sys.exit(1)
 
         data.extend(page_data)
 
@@ -114,7 +125,7 @@ def http_method(url, data={}, method=None, fail_ok=False):
     if args.dry_run and (method != 'GET'):
         return
 
-    qprint(f'{DARK_GRAY}{method} {url}{RESET}')
+    qprint(f'🌐 {DARK_GRAY}{method} {url}{RESET}')
     r = request_method(url, headers=headers, json=data)
     try:
         data = r.json()
@@ -124,7 +135,7 @@ def http_method(url, data={}, method=None, fail_ok=False):
     data["status"] = r.status_code
 
     if ("message" in data) and (not fail_ok):
-        qprint(f"Error retrieving {url}: {data['message']}")
+        qprint(f"⚠ Error retrieving {url}: {data['message']}")
         sys.exit(1)
 
     return data
@@ -184,7 +195,7 @@ missing_teams = desired_teams - existing_teams
 for team in missing_teams:
     team_info = config[team]
 
-    qprint(f"Creating `{team}` team")
+    qprint(f"🔧 Creating `{team}` team")
     post(
         f"/orgs/{org}/teams",
         {
@@ -210,7 +221,7 @@ for team in config.values():
     if (config_description and
         (config_description != gh_team["description"])):
 
-        qprint(f"Updating `{team_slug}` description to `{config_description}`")
+        qprint(f"🔧 Updating `{team_slug}` description to `{config_description}`")
         patch(
             f"/orgs/{org}/teams/{team_slug}",
             {"description": config_description}
@@ -224,14 +235,14 @@ for team in config.values():
     members_removed = members - set(team["members"])
 
     for username in members_added:
-        qprint(f"Adding `{username}` to `{team_slug}`")
+        qprint(f"🔧 Adding `{username}` to `{team_slug}`")
         put(
             f"/orgs/{org}/teams/{team_slug}/memberships/{username}",
             {"role": "member"}
         )
 
     for username in members_removed:
-        qprint(f"Removing `{username}` from `{team_slug}`")
+        qprint(f"🔧 Removing `{username}` from `{team_slug}`")
         delete(f"/orgs/{org}/teams/{team_slug}/memberships/{username}")
 
     for repo_role in team.get("permissions", []):
@@ -251,10 +262,10 @@ for team in config.values():
 
         if gh_role != role:
             if role is None:
-                qprint(f"Revoking `{team_slug}` access from repo `{owner}/{repo}`")
+                qprint(f"🔧 Revoking `{team_slug}` access from repo `{owner}/{repo}`")
                 delete(f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}")
             else:
-                qprint(f"Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
+                qprint(f"🔧 Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
                 put(
                     f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
                     {"permission": role}
