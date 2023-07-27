@@ -60,6 +60,8 @@ See the [token](#token) section below.
       role: triage
 ```
 
+After the action is run, you will see its output in the *workflow summary*.
+
 ## Child teams permissions
 
 Setting repo permissions for child teams is not supported.
