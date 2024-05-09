@@ -7,7 +7,6 @@ import requests
 import argparse
 import os
 import json
-import argparse
 import functools
 import sys
 import re
@@ -17,35 +16,30 @@ org = "scientific-python"
 api = "https://api.github.com"
 
 parser = argparse.ArgumentParser()
+parser.add_argument("-n", "--dry-run", action="store_true")
 parser.add_argument(
-    '-n', '--dry-run',
-    action='store_true'
+    "-d",
+    "--download",
+    action="store_true",
+    help="Download current team membership/permissions",
 )
 parser.add_argument(
-    '-d', '--download',
-    action='store_true', help="Download current team membership/permissions"
+    "-q", "--quiet", action="store_true", help="Suppress HTTP method output"
 )
 parser.add_argument(
-    '-q', '--quiet',
-    action='store_true', help='Suppress HTTP method output'
-)
-parser.add_argument(
-    '-m', '--markdown',
-    action='store_true', help='Print output in Markdown format'
+    "-m", "--markdown", action="store_true", help="Print output in Markdown format"
 )
 args = parser.parse_args()
 
-if not 'GH_TOKEN' in os.environ:
+if "GH_TOKEN" not in os.environ:
     print("Please set `GH_TOKEN` before running this script.\n")
     print(
-        "The token needs to be a classic token with 'Repo' "
-        "and 'Admin' permissions."
+        "The token needs to be a classic token with 'Repo' " "and 'Admin' permissions."
     )
     sys.exit(1)
 
 
 headers = {
-    "Accept": "application/vnd.github+json",
     "Accept": "application/vnd.github.v3.repository+json",
     "X-GitHub-Api-Version": "2022-11-28",
     "Authorization": f"token {os.environ['GH_TOKEN']}",
@@ -63,17 +57,16 @@ RESET = "\033[0m"
 def qprint(msg, **kwargs):
     # Strip ANSI if output is markdown
     if args.markdown:
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        msg = ansi_escape.sub('', msg)
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        msg = ansi_escape.sub("", msg)
 
     if not args.quiet:
         print(msg, **kwargs)
 
 
 def get_pages(url):
-    """Get with paging.
-    """
-    if url.startswith('/'):
+    """Get with paging."""
+    if url.startswith("/"):
         url = api + url
 
     page = 1
@@ -82,9 +75,9 @@ def get_pages(url):
 
     while more_pages:
         if page == 1:
-            qprint(f'🌐 {DARK_GRAY}GET {url}{RESET}')
+            qprint(f"🌐 {DARK_GRAY}GET {url}{RESET}")
         else:
-            qprint(f'🌐 {DARK_GRAY}GET {url} [{page}]{RESET}')
+            qprint(f"🌐 {DARK_GRAY}GET {url} [{page}]{RESET}")
 
         r = requests.get(url + f"?page={page}", headers=headers)
 
@@ -118,14 +111,14 @@ def http_method(url, data={}, method=None, fail_ok=False):
     if method is None:
         raise RuntimeError("Need HTTP method")
 
-    if url.startswith('/'):
+    if url.startswith("/"):
         url = api + url
 
     # Skip all methods other than GET on dry run
-    if args.dry_run and (method != 'GET'):
+    if args.dry_run and (method != "GET"):
         return
 
-    qprint(f'🌐 {DARK_GRAY}{method} {url}{RESET}')
+    qprint(f"🌐 {DARK_GRAY}{method} {url}{RESET}")
     r = request_method(url, headers=headers, json=data)
     try:
         data = r.json()
@@ -141,11 +134,11 @@ def http_method(url, data={}, method=None, fail_ok=False):
     return data
 
 
-get = functools.partial(http_method, method='GET')
-post = functools.partial(http_method, method='POST')
-patch = functools.partial(http_method, method='PATCH')
-put = functools.partial(http_method, method='PUT')
-delete = functools.partial(http_method, method='DELETE')
+get = functools.partial(http_method, method="GET")
+post = functools.partial(http_method, method="POST")
+patch = functools.partial(http_method, method="PATCH")
+put = functools.partial(http_method, method="PUT")
+delete = functools.partial(http_method, method="DELETE")
 
 
 gh_teams = {team["name"]: team for team in get_pages(f"/orgs/{org}/teams")}
@@ -155,7 +148,7 @@ if args.download:
     out = []
 
     for team, data in gh_teams.items():
-        team_slug = data['slug']
+        team_slug = data["slug"]
         members = {
             member["login"]
             for member in get_pages(f"/orgs/{org}/teams/{team_slug}/members")
@@ -163,17 +156,16 @@ if args.download:
 
         gh_repos = get_pages(f"/orgs/{org}/teams/{team_slug}/repos")
         permissions = [
-            {'repo': repo['name'], 'role': repo['role_name']}
-            for repo in gh_repos
+            {"repo": repo["name"], "role": repo["role_name"]} for repo in gh_repos
         ]
 
         t = {
-            'name' : team,
-            'description': data['description'],
-            'members': sorted(members, key=lambda x: x.lower())
+            "name": team,
+            "description": data["description"],
+            "members": sorted(members, key=lambda x: x.lower()),
         }
         if permissions:
-            t['permissions'] = permissions
+            t["permissions"] = permissions
 
         out.append(t)
 
@@ -201,8 +193,8 @@ for team in missing_teams:
         {
             "name": team_info["name"],
             "description": team_info["description"],
-            "privacy": "closed"
-        }
+            "privacy": "closed",
+        },
     )
 
 if missing_teams:
@@ -218,14 +210,9 @@ for team in config.values():
     # Detect and patch differences between config file team and GH team
     # Currently, only description.
     config_description = team.get("description")
-    if (config_description and
-        (config_description != gh_team["description"])):
-
+    if config_description and (config_description != gh_team["description"]):
         qprint(f"🔧 Updating `{team_slug}` description to `{config_description}`")
-        patch(
-            f"/orgs/{org}/teams/{team_slug}",
-            {"description": config_description}
-        )
+        patch(f"/orgs/{org}/teams/{team_slug}", {"description": config_description})
 
     members = {
         member["login"]
@@ -236,10 +223,7 @@ for team in config.values():
 
     for username in members_added:
         qprint(f"🔧 Adding `{username}` to `{team_slug}`")
-        put(
-            f"/orgs/{org}/teams/{team_slug}/memberships/{username}",
-            {"role": "member"}
-        )
+        put(f"/orgs/{org}/teams/{team_slug}/memberships/{username}", {"role": "member"})
 
     for username in members_removed:
         qprint(f"🔧 Removing `{username}` from `{team_slug}`")
@@ -251,8 +235,7 @@ for team in config.values():
         owner = "scientific-python"
 
         response = get(
-            f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
-            fail_ok=True
+            f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}", fail_ok=True
         )
         if response["status"] not in (200, 404):
             print("Error: could not query `{team_slug}` access to `{repo}/{role}`")
@@ -263,17 +246,16 @@ for team in config.values():
         if gh_role != role:
             # The GitHub API has inconsistent role values, so we need to translate.
             # https://github.com/github/rest-api-description/issues/1378
-            role = {
-                "write": "push",
-                "read": "pull"
-            }.get(role, role)
+            role = {"write": "push", "read": "pull"}.get(role, role)
 
             if role is None:
                 qprint(f"🔧 Revoking `{team_slug}` access from repo `{owner}/{repo}`")
                 delete(f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}")
             else:
-                qprint(f"🔧 Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`")
+                qprint(
+                    f"🔧 Changing `{team_slug}` role from `{gh_role}` to `{role}` on `{owner}/{repo}`"
+                )
                 put(
                     f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}",
-                    {"permission": role}
+                    {"permission": role},
                 )
