@@ -1,7 +1,7 @@
 # Synchronize team membership / permissions
 
 This actions reads in a `teams.yaml` file which specifies team
-membership and permission.  It then synchronizes that with GitHub,
+membership and permission. It then synchronizes that with GitHub,
 making changes as necessary.
 
 Note that it only touches teams that are specified in the
@@ -64,7 +64,7 @@ Valid permissions are `read`, `write`, `triage`, `maintain`, and `admin`.
 
 ## Action output
 
-After the action is run, you will see its output in the *workflow summary*.
+After the action is run, you will see its output in the _workflow summary_.
 
 ## Child teams permissions
 

@@ -1,9 +1,9 @@
-name: 'Synchronize teams to GitHub'
-description: 'Read team membership/permissions from YAML and make changes on GH as necessary'
+name: "Synchronize teams to GitHub"
+description: "Read team membership/permissions from YAML and make changes on GH as necessary"
 
 inputs:
   token:
-    description: 'A Github personal authentication token'
+    description: "A Github personal authentication token"
     required: true
 
 runs:
