@@ -40,7 +40,6 @@ if "GH_TOKEN" not in os.environ:
 
 
 headers = {
-    "Accept": "application/vnd.github+json",
     "Accept": "application/vnd.github.v3.repository+json",
     "X-GitHub-Api-Version": "2022-11-28",
     "Authorization": f"token {os.environ['GH_TOKEN']}",
