@@ -15,6 +15,9 @@ import re
 org = "scientific-python"
 api = "https://api.github.com"
 
+valid_roles = ("read", "triage", "write", "maintain", "admin")
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--dry-run", action="store_true")
 parser.add_argument(
@@ -233,6 +236,10 @@ for team in config.values():
         repo = repo_role["repo"]
         role = repo_role["role"]
         owner = "scientific-python"
+
+        if role not in valid_roles:
+            print(f"Error: role `{role}` must be one of {', '.join(valid_roles)}")
+            sys.exit(1)
 
         response = get(
             f"/orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}", fail_ok=True
