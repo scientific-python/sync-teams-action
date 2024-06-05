@@ -12,7 +12,6 @@ import sys
 import re
 
 
-org = "scientific-python"
 api = "https://api.github.com"
 
 valid_roles = ("read", "triage", "write", "maintain", "admin")
@@ -32,7 +31,11 @@ parser.add_argument(
 parser.add_argument(
     "-m", "--markdown", action="store_true", help="Print output in Markdown format"
 )
+parser.add_argument("-o", "--org", type=str, required=True)
+
 args = parser.parse_args()
+
+org = args.org
 
 if "GH_TOKEN" not in os.environ:
     print("Please set `GH_TOKEN` before running this script.\n")
@@ -235,7 +238,7 @@ for team in config.values():
     for repo_role in team.get("permissions", []):
         repo = repo_role["repo"]
         role = repo_role["role"]
-        owner = "scientific-python"
+        owner = org
 
         if role not in valid_roles:
             print(f"Error: role `{role}` must be one of {', '.join(valid_roles)}")
