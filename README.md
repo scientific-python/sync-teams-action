@@ -60,7 +60,13 @@ See the [token](#token) section below.
       role: triage
 ```
 
-Valid permissions are `read`, `write`, `triage`, `maintain`, and `admin`.
+[Valid roles](https://docs.github.com/en/organizations/managing-user-access-to-your-organizations-repositories/managing-repository-roles/repository-roles-for-an-organization#repository-roles-for-organizations) are:
+
+- `read`: Recommended for non-code contributors who want to view or discuss your project.
+- `triage`: Recommended for contributors who need to proactively manage issues, discussions, and pull requests without write access.
+- `write`: Recommended for contributors who actively push to your project.
+- `maintain`: Recommended for project managers who need to manage the repository without access to sensitive or destructive actions.
+- `admin`: Recommended for people who need full access to the project, including sensitive and destructive actions like managing security or deleting a repository.
 
 ## Action output
 
