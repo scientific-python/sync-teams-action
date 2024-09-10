@@ -212,6 +212,7 @@ for team in config.values():
     name = team["name"]
     gh_team = gh_teams[team["name"]]
     team_slug = gh_team["slug"]
+    team_members = {member.lower() for member in team["members"]}
 
     # Detect and patch differences between config file team and GH team
     # Currently, only description.
@@ -220,12 +221,12 @@ for team in config.values():
         qprint(f"🔧 Updating `{team_slug}` description to `{config_description}`")
         patch(f"/orgs/{org}/teams/{team_slug}", {"description": config_description})
 
-    members = {
-        member["login"]
+    gh_members = {
+        member["login"].lower()
         for member in get_pages(f"/orgs/{org}/teams/{team_slug}/members")
     }
-    members_added = set(team["members"]) - members
-    members_removed = members - set(team["members"])
+    members_added = team_members - gh_members
+    members_removed = gh_members - team_members
 
     for username in members_added:
         qprint(f"🔧 Adding `{username}` to `{team_slug}`")
