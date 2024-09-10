@@ -78,7 +78,7 @@ Setting repo permissions for child teams is not supported.
 
 ## Token
 
-The script requires a classic token with `org` and `admin` permissions, exported as a `GH_TOKEN` environment variable.
+The script requires a classic token with `repo` and `admin:org` permissions, exported as a `GH_TOKEN` environment variable.
 
 A token can be created at:
 
