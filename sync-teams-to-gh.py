@@ -39,9 +39,7 @@ org = args.org
 
 if "GH_TOKEN" not in os.environ:
     print("Please set `GH_TOKEN` before running this script.\n")
-    print(
-        "The token needs to be a classic token with 'Repo' " "and 'Admin' permissions."
-    )
+    print("The token needs to be a classic token with 'Repo' and 'Admin' permissions.")
     sys.exit(1)
 
 
