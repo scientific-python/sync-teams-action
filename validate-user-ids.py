@@ -59,7 +59,9 @@ def main():
     token = os.environ.get("GH_TOKEN")
     if not token:
         print("Error: GH_TOKEN environment variable is not set.", file=sys.stderr)
-        print("       Generate a token with no added roles/permissions.", file=sys.stderr)
+        print(
+            "       Generate a token with no added roles/permissions.", file=sys.stderr
+        )
         sys.exit(1)
 
     cache_file = ".user-id-cache.json"
@@ -119,7 +121,10 @@ def main():
         print("Successfully updated user-ids.yaml")
     else:
         if missing_members or extra_members:
-            print("\nRun validate-user-ids.py --sync locally to update user-ids.yaml.", file=sys.stderr)
+            print(
+                "\nRun validate-user-ids.py --sync locally to update user-ids.yaml.",
+                file=sys.stderr,
+            )
             sys.exit(1)
         print("Validation successful. No user IDs changed.")
 
