@@ -4,6 +4,9 @@ This actions reads in a `teams.yaml` file which specifies team
 membership and permission. It then synchronizes that with GitHub,
 making changes as necessary.
 
+Before doing so, it validates that GitHub usernames did not change, by
+matching user IDs cached in `user-ids.yaml`.
+
 Note that it only touches teams that are specified in the
 `teams.yaml`. In other words, if a team is deleted from the YAML file,
 the synchronization script won't do anything about it (it has no
@@ -84,12 +87,13 @@ A token can be created at:
 
 https://github.com/settings/tokens/new
 
-## Initial creation of `teams.yaml`
+## Initial creation of `teams.yaml` and `user-ids.yaml`
 
 Existing team membership can be downloaded from GitHub using:
 
 ```
-sync-teams-to-gh.py --download > teams.yaml
+python sync-teams-to-gh.py --download > teams.yaml
+python validate-user-ids.py --sync
 ```
 
 ## Revoking team access from repo
