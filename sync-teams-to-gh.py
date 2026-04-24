@@ -31,6 +31,9 @@ parser.add_argument(
 parser.add_argument(
     "-m", "--markdown", action="store_true", help="Print output in Markdown format"
 )
+parser.add_argument(
+    "-p", "--path", action="store_true", help="path to the teams.yaml file"
+)
 parser.add_argument("-o", "--org", type=str, required=True)
 
 args = parser.parse_args()
@@ -179,7 +182,9 @@ if args.download:
     sys.exit()
 
 
-config = yaml.load(open("teams.yaml"), Loader=yaml.SafeLoader)
+path = args.path or "teams.yaml"
+
+config = yaml.load(open(path), Loader=yaml.SafeLoader)
 config = {team["name"]: team for team in config}
 
 
