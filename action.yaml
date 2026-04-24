@@ -5,6 +5,9 @@ inputs:
   token:
     description: "A Github personal authentication token"
     required: true
+  yamlpath:
+    description: "Path to the teams.yaml file (if missing, assume it's in repo root)"
+    required: false
 
 runs:
   using: "composite"
