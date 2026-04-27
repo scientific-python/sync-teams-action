@@ -31,9 +31,7 @@ parser.add_argument(
 parser.add_argument(
     "-m", "--markdown", action="store_true", help="Print output in Markdown format"
 )
-parser.add_argument(
-    "-p", "--path", action="store_true", help="path to the teams.yaml file"
-)
+parser.add_argument("-p", "--path", help="path to the teams.yaml file")
 parser.add_argument("-o", "--org", type=str, required=True)
 
 args = parser.parse_args()
