@@ -2,15 +2,15 @@
 Requires classic token with permissions "Repo" and "Admin"
 """
 
-import yaml
-import requests
 import argparse
-import os
-import json
 import functools
-import sys
+import json
+import os
 import re
+import sys
 
+import requests
+import yaml
 
 api = "https://api.github.com"
 
